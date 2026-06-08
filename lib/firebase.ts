@@ -30,7 +30,7 @@ import {
 } from "firebase/storage"
 
 /////////////////////////////////////////////////////
-// 🔥 FIREBASE CONFIG
+// 🔥 FIREBASE CONFIG (DOĞRU FORMAT)
 /////////////////////////////////////////////////////
 
 const firebaseConfig = {
@@ -39,11 +39,12 @@ const firebaseConfig = {
   projectId: "elo-web-12",
   storageBucket: "elo-web-12.appspot.com",
   messagingSenderId: "144156166921",
-  appId: "1:144156166921:web:0bbfdb70d9974a66c0e1d8"
+  appId: "1:144156166921:web:0bbfdb70d9974a66c0e1d8",
+  measurementId: "G-3SDL98VW1F"
 }
 
 /////////////////////////////////////////////////////
-// INIT
+// INIT APP
 /////////////////////////////////////////////////////
 
 const app = getApps().length ? getApp() : initializeApp(firebaseConfig)
@@ -53,7 +54,7 @@ export const db = getFirestore(app)
 export const storage = getStorage(app)
 
 /////////////////////////////////////////////////////
-// AUTH
+// AUTH EXPORTS
 /////////////////////////////////////////////////////
 
 export {
@@ -69,12 +70,16 @@ export {
 export const saveUser = async (user: any) => {
   if (!user) return
 
-  await setDoc(doc(db, "users", user.uid), {
-    uid: user.uid,
-    email: user.email,
-    online: true,
-    lastSeen: Date.now()
-  }, { merge: true })
+  await setDoc(
+    doc(db, "users", user.uid),
+    {
+      uid: user.uid,
+      email: user.email,
+      online: true,
+      lastSeen: Date.now()
+    },
+    { merge: true }
+  )
 }
 
 /////////////////////////////////////////////////////
@@ -134,32 +139,32 @@ export const addComment = async (
 
 export const uploadImage = async (file: File, path: string) => {
   const fileRef = ref(storage, path)
+
   await uploadBytes(fileRef, file)
+
   return await getDownloadURL(fileRef)
 }
 
 /////////////////////////////////////////////////////
-// CHAT SYSTEM (DM + GROUP READY)
+// CHAT SYSTEM
 /////////////////////////////////////////////////////
 
 export const getChatId = (uids: string[]) =>
   [...uids].sort().join("_")
 
-export const createOrGetChat = async (
-  members: string[],
-  type: "dm" | "group",
-  name?: string
-) => {
+export const createOrGetChat = async (members: string[]) => {
   const chatId = getChatId(members)
 
-  await setDoc(doc(db, "chats", chatId), {
-    id: chatId,
-    members,
-    type,
-    name: name || null,
-    lastMessage: "",
-    updatedAt: Date.now()
-  }, { merge: true })
+  await setDoc(
+    doc(db, "chats", chatId),
+    {
+      id: chatId,
+      members,
+      lastMessage: "",
+      updatedAt: Date.now()
+    },
+    { merge: true }
+  )
 
   return chatId
 }
@@ -168,29 +173,22 @@ export const sendMessage = async (
   chatId: string,
   text: string,
   from: string,
-  to?: string
+  to: string
 ) => {
-  return await addDoc(
+  await addDoc(
     collection(db, "chats", chatId, "messages"),
     {
       text,
       from,
-      to: to || null,
+      to,
       status: "sent",
       createdAt: Date.now()
     }
   )
-}
 
-export const markMessageDelivered = async (docRef: any) => {
-  await updateDoc(docRef, {
-    status: "delivered"
-  })
-}
-
-export const markMessageSeen = async (docRef: any) => {
-  await updateDoc(docRef, {
-    status: "seen"
+  await updateDoc(doc(db, "chats", chatId), {
+    lastMessage: text,
+    updatedAt: Date.now()
   })
 }
 
@@ -206,13 +204,6 @@ export const postsQuery = query(
 export const usersQuery = query(
   collection(db, "users")
 )
-
-export const userChatsQuery = (uid: string) =>
-  query(
-    collection(db, "chats"),
-    where("members", "array-contains", uid),
-    orderBy("updatedAt", "desc")
-  )
 
 export const chatMessagesQuery = (chatId: string) =>
   query(
