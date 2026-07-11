@@ -92,7 +92,7 @@ export async function addComment(post: any, user: any, text: string) {
 
 export async function uploadImage(file: File, path: string) {
   const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "-")
-  const fileRef = ref(storage, \`${path}/${Date.now()}-${safeName}\`)
+  const fileRef = ref(storage, `${path}/${Date.now()}-${safeName}\`)
   await uploadBytes(fileRef, file)
   return getDownloadURL(fileRef)
 }
