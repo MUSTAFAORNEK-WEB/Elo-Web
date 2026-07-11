@@ -114,118 +114,7 @@ if (!user) {
     </div>
   )
 }
-function LoginBox({
-  email,
-  setEmail,
-  password,
-  setPassword,
-  login,
-  register
-}: any) {
 
-  const [loading, setLoading] = useState(false)
-  const [showPass, setShowPass] = useState(false)
-  const [error, setError] = useState("")
-
-  const handleLogin = async () => {
-    try {
-      setLoading(true)
-      setError("")
-      await login()
-    } catch (err: any) {
-      setError(err.message)
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const handleRegister = async () => {
-    try {
-      setLoading(true)
-      setError("")
-      await register()
-    } catch (err: any) {
-      setError(err.message)
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  return (
-    <div className="w-full max-w-sm bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl p-6 shadow-2xl">
-
-      {/* LOGO */}
-      <div className="text-center mb-6">
-        <h1 className="text-4xl font-extrabold tracking-widest text-pink-500">
-          ELO
-        </h1>
-        <p className="text-gray-400 text-sm mt-1">
-          Sosyal dünyana hoş geldin
-        </p>
-      </div>
-
-      {/* ERROR */}
-      {error && (
-        <div className="bg-red-500/20 border border-red-500 text-red-300 text-xs p-2 rounded mb-3">
-          {error}
-        </div>
-      )}
-
-      {/* EMAIL */}
-      <input
-        className="w-full p-3 mb-3 rounded-lg bg-black/40 border border-gray-700 text-white focus:outline-none focus:border-pink-500"
-        placeholder="E-posta"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-      />
-
-      {/* PASSWORD */}
-      <div className="relative mb-4">
-
-        <input
-          className="w-full p-3 rounded-lg bg-black/40 border border-gray-700 text-white focus:outline-none focus:border-pink-500"
-          type={showPass ? "text" : "password"}
-          placeholder="Şifre"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-        />
-
-        <button
-          type="button"
-          onClick={() => setShowPass(!showPass)}
-          className="absolute right-3 top-3 text-xs text-gray-400"
-        >
-          {showPass ? "Gizle" : "Göster"}
-        </button>
-
-      </div>
-
-      {/* LOGIN */}
-      <button
-        disabled={loading}
-        onClick={handleLogin}
-        className="w-full bg-pink-500 hover:bg-pink-600 disabled:opacity-50 transition text-white font-bold py-3 rounded-lg mb-3"
-      >
-        {loading ? "Giriş yapılıyor..." : "Giriş Yap"}
-      </button>
-
-      {/* REGISTER */}
-      <button
-        disabled={loading}
-        onClick={handleRegister}
-        className="w-full bg-white/10 hover:bg-white/20 disabled:opacity-50 transition text-white font-bold py-3 rounded-lg border border-white/20"
-      >
-        Hesap Oluştur
-      </button>
-
-      {/* FOOTER */}
-      <p className="text-center text-xs text-gray-500 mt-5">
-        Elo Web • Pro Max UI
-      </p>
-
-    </div>
-  )
-}
 
   return (
     <div className="min-h-screen bg-gray-100 pb-20">
@@ -444,3 +333,118 @@ function ChatBox({ currentUser, targetUser, onClose }: any) {
     </div>
   )
 }
+
+/* LOGIN COMPONENT */
+function LoginBox({
+  email,
+  setEmail,
+  password,
+  setPassword,
+  login,
+  register
+}: any) {
+
+  const [loading, setLoading] = useState(false)
+  const [showPass, setShowPass] = useState(false)
+  const [error, setError] = useState("")
+
+  const handleLogin = async () => {
+    try {
+      setLoading(true)
+      setError("")
+      await login()
+    } catch (err: any) {
+      setError(err.message)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleRegister = async () => {
+    try {
+      setLoading(true)
+      setError("")
+      await register()
+    } catch (err: any) {
+      setError(err.message)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <div className="w-full max-w-sm bg-white/10 backdrop-blur-xl border border-white/20 rounded-2xl p-6 shadow-2xl">
+
+      {/* LOGO */}
+      <div className="text-center mb-6">
+        <h1 className="text-4xl font-extrabold tracking-widest text-pink-500">
+          ELO
+        </h1>
+        <p className="text-gray-400 text-sm mt-1">
+          Sosyal dünyana hoş geldin
+        </p>
+      </div>
+
+      {/* ERROR */}
+      {error && (
+        <div className="bg-red-500/20 border border-red-500 text-red-300 text-xs p-2 rounded mb-3">
+          {error}
+        </div>
+      )}
+
+      {/* EMAIL */}
+      <input
+        className="w-full p-3 mb-3 rounded-lg bg-black/40 border border-gray-700 text-white focus:outline-none focus:border-pink-500"
+        placeholder="E-posta"
+        value={email}
+        onChange={(e) => setEmail(e.target.value)}
+      />
+
+      {/* PASSWORD */}
+      <div className="relative mb-4">
+
+        <input
+          className="w-full p-3 rounded-lg bg-black/40 border border-gray-700 text-white focus:outline-none focus:border-pink-500"
+          type={showPass ? "text" : "password"}
+          placeholder="Şifre"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+        />
+
+        <button
+          type="button"
+          onClick={() => setShowPass(!showPass)}
+          className="absolute right-3 top-3 text-xs text-gray-400"
+        >
+          {showPass ? "Gizle" : "Göster"}
+        </button>
+
+      </div>
+
+      {/* LOGIN */}
+      <button
+        disabled={loading}
+        onClick={handleLogin}
+        className="w-full bg-pink-500 hover:bg-pink-600 disabled:opacity-50 transition text-white font-bold py-3 rounded-lg mb-3"
+      >
+        {loading ? "Giriş yapılıyor..." : "Giriş Yap"}
+      </button>
+
+      {/* REGISTER */}
+      <button
+        disabled={loading}
+        onClick={handleRegister}
+        className="w-full bg-white/10 hover:bg-white/20 disabled:opacity-50 transition text-white font-bold py-3 rounded-lg border border-white/20"
+      >
+        Hesap Oluştur
+      </button>
+
+      {/* FOOTER */}
+      <p className="text-center text-xs text-gray-500 mt-5">
+        Elo Web • Pro Max UI
+      </p>
+
+    </div>
+  )
+}
+

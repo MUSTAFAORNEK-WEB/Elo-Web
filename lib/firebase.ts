@@ -18,8 +18,9 @@ import {
   arrayRemove,
   query,
   orderBy,
+  where,
   onSnapshot,
-  where
+  serverTimestamp
 } from "firebase/firestore"
 
 import {
@@ -29,8 +30,10 @@ import {
   getDownloadURL
 } from "firebase/storage"
 
+import { getMessaging, getToken } from "firebase/messaging"
+
 /////////////////////////////////////////////////////
-// 🔥 FIREBASE CONFIG (DOĞRU FORMAT)
+// FIREBASE CONFIG
 /////////////////////////////////////////////////////
 
 const firebaseConfig = {
@@ -39,12 +42,11 @@ const firebaseConfig = {
   projectId: "elo-web-12",
   storageBucket: "elo-web-12.appspot.com",
   messagingSenderId: "144156166921",
-  appId: "1:144156166921:web:0bbfdb70d9974a66c0e1d8",
-  measurementId: "G-3SDL98VW1F"
+  appId: "1:144156166921:web:0bbfdb70d9974a66c0e1d8"
 }
 
 /////////////////////////////////////////////////////
-// INIT APP
+// INIT
 /////////////////////////////////////////////////////
 
 const app = getApps().length ? getApp() : initializeApp(firebaseConfig)
@@ -52,9 +54,10 @@ const app = getApps().length ? getApp() : initializeApp(firebaseConfig)
 export const auth = getAuth(app)
 export const db = getFirestore(app)
 export const storage = getStorage(app)
+export const messaging = typeof window !== "undefined" ? getMessaging(app) : null
 
 /////////////////////////////////////////////////////
-// AUTH EXPORTS
+// AUTH
 /////////////////////////////////////////////////////
 
 export {
@@ -76,7 +79,7 @@ export const saveUser = async (user: any) => {
       uid: user.uid,
       email: user.email,
       online: true,
-      lastSeen: Date.now()
+      lastSeen: serverTimestamp()
     },
     { merge: true }
   )
@@ -104,6 +107,10 @@ export const createPost = async (
   })
 }
 
+/////////////////////////////////////////////////////
+// LIKE SYSTEM
+/////////////////////////////////////////////////////
+
 export const toggleLike = async (post: any, user: any) => {
   const refPost = doc(db, "posts", post.id)
 
@@ -114,7 +121,21 @@ export const toggleLike = async (post: any, user: any) => {
       ? arrayRemove(user.uid)
       : arrayUnion(user.uid)
   })
+
+  // notification
+  if (!liked && post.user?.uid !== user.uid) {
+    await createNotification(
+      post.user.uid,
+      user,
+      "like",
+      post.id
+    )
+  }
 }
+
+/////////////////////////////////////////////////////
+// COMMENT SYSTEM
+/////////////////////////////////////////////////////
 
 export const addComment = async (
   post: any,
@@ -131,6 +152,16 @@ export const addComment = async (
       createdAt: Date.now()
     })
   })
+
+  if (post.user?.uid !== user.uid) {
+    await createNotification(
+      post.user.uid,
+      user,
+      "comment",
+      post.id,
+      text
+    )
+  }
 }
 
 /////////////////////////////////////////////////////
@@ -149,25 +180,8 @@ export const uploadImage = async (file: File, path: string) => {
 // CHAT SYSTEM
 /////////////////////////////////////////////////////
 
-export const getChatId = (uids: string[]) =>
-  [...uids].sort().join("_")
-
-export const createOrGetChat = async (members: string[]) => {
-  const chatId = getChatId(members)
-
-  await setDoc(
-    doc(db, "chats", chatId),
-    {
-      id: chatId,
-      members,
-      lastMessage: "",
-      updatedAt: Date.now()
-    },
-    { merge: true }
-  )
-
-  return chatId
-}
+export const getChatId = (uid1: string, uid2: string) =>
+  [uid1, uid2].sort().join("_")
 
 export const sendMessage = async (
   chatId: string,
@@ -175,21 +189,71 @@ export const sendMessage = async (
   from: string,
   to: string
 ) => {
-  await addDoc(
-    collection(db, "chats", chatId, "messages"),
-    {
-      text,
-      from,
-      to,
-      status: "sent",
-      createdAt: Date.now()
-    }
-  )
+  await addDoc(collection(db, "chats", chatId, "messages"), {
+    text,
+    from,
+    to,
+    createdAt: serverTimestamp()
+  })
 
   await updateDoc(doc(db, "chats", chatId), {
     lastMessage: text,
-    updatedAt: Date.now()
+    updatedAt: serverTimestamp()
   })
+
+  await createNotification(to, { uid: from }, "message", chatId, text)
+}
+
+/////////////////////////////////////////////////////
+// NOTIFICATION SYSTEM
+/////////////////////////////////////////////////////
+
+export const createNotification = async (
+  toUid: string,
+  fromUser: any,
+  type: "like" | "comment" | "message",
+  postId?: string,
+  text?: string
+) => {
+  await addDoc(collection(db, "notifications"), {
+    toUid,
+    fromUid: fromUser.uid,
+    fromEmail: fromUser.email,
+    type,
+    postId: postId || null,
+    text: text || null,
+    createdAt: serverTimestamp(),
+    seen: false
+  })
+}
+
+export const notificationsQuery = (uid: string) =>
+  query(
+    collection(db, "notifications"),
+    where("toUid", "==", uid),
+    orderBy("createdAt", "desc")
+  )
+
+/////////////////////////////////////////////////////
+// PUSH NOTIFICATION (FCM TOKEN)
+/////////////////////////////////////////////////////
+
+export const saveFcmToken = async (uid: string) => {
+  if (!messaging) return
+
+  const token = await getToken(messaging, {
+    vapidKey: "XwH8iaWb_hQqrGRfG9xeDgG4MI5Gr0EnSKsSdwmZbS4"
+  })
+
+  if (!token) return
+
+  await setDoc(
+    doc(db, "users", uid),
+    {
+      fcmToken: token
+    },
+    { merge: true }
+  )
 }
 
 /////////////////////////////////////////////////////
