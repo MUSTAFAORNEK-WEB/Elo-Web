@@ -28,9 +28,6 @@ export default function Page() {
 
   const [tab, setTab] = useState("home")
 
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
-
   const [posts, setPosts] = useState<any[]>([])
   const [users, setUsers] = useState<any[]>([])
 
@@ -68,14 +65,6 @@ export default function Page() {
     return () => unsub()
   }, [])
 
-  const login = async () => {
-    await signInWithEmailAndPassword(auth, email, password)
-  }
-
-  const register = async () => {
-    await createUserWithEmailAndPassword(auth, email, password)
-  }
-
   const sharePost = async () => {
     let imageUrl = null
 
@@ -102,14 +91,7 @@ if (!user) {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-black via-gray-900 to-black px-4">
 
-      <LoginBox
-        email={email}
-        setEmail={setEmail}
-        password={password}
-        setPassword={setPassword}
-        login={login}
-        register={register}
-      />
+      <LoginBox />
 
     </div>
   )
@@ -335,15 +317,10 @@ function ChatBox({ currentUser, targetUser, onClose }: any) {
 }
 
 /* LOGIN COMPONENT */
-function LoginBox({
-  email,
-  setEmail,
-  password,
-  setPassword,
-  login,
-  register
-}: any) {
+function LoginBox() {
 
+  const [email, setEmail] = useState("")
+  const [password, setPassword] = useState("")
   const [loading, setLoading] = useState(false)
   const [showPass, setShowPass] = useState(false)
   const [error, setError] = useState("")
@@ -352,7 +329,7 @@ function LoginBox({
     try {
       setLoading(true)
       setError("")
-      await login()
+      await signInWithEmailAndPassword(auth, email, password)
     } catch (err: any) {
       setError(err.message)
     } finally {
@@ -364,7 +341,7 @@ function LoginBox({
     try {
       setLoading(true)
       setError("")
-      await register()
+      await createUserWithEmailAndPassword(auth, email, password)
     } catch (err: any) {
       setError(err.message)
     } finally {
@@ -447,4 +424,5 @@ function LoginBox({
     </div>
   )
 }
+
 
